@@ -1,0 +1,30 @@
+package net.serveron.hane.ranking;
+
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.serveron.hane.MainSystem;
+
+import java.util.LinkedHashMap;
+import java.util.StringJoiner;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
+public record Sender() {
+
+    public static void send(String type, LinkedHashMap<String, Long> data) {
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setTitle("**" + type + "ランキング！**");
+        StringJoiner sj = new StringJoiner("\n");
+        AtomicInteger rank = new AtomicInteger(0);
+        AtomicLong lastScore = new AtomicLong(-1);
+        data.forEach((id, value) -> {
+            if (value != lastScore.get()) {
+                rank.incrementAndGet();
+                lastScore.set(value);
+            }
+            sj.add("**" + rank + "位: <@" + id + "> (" + value + ")**");
+        });
+        eb.addField("", sj.toString(), false);
+        MainSystem.getTextChannel().sendMessageEmbeds(eb.build()).queue();
+    }
+
+}
