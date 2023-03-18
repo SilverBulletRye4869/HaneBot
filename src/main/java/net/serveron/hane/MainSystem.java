@@ -20,6 +20,7 @@ import java.io.*;
 public class MainSystem {
     public static final String DOCUMENT_NAME = "discordID";  //データベース名
     public static final int RANKING_MAX_COUNT = 20;  //最大何人分のランキングを表示するか？
+    public static final String RANKING_SEND_CHANNEL = "";  //ランキングを送信するchのid
 
     private static final String TOKEN_FILE_PATH = "";
     private static final String FIREBASE_JSON_FILE_PATH = "";
@@ -93,7 +94,7 @@ public class MainSystem {
     public static Firestore getDB(){return db;}
 
     public static TextChannel getTextChannel(){
-        if(textChannel==null)textChannel = jda.getTextChannelById("1056559571004563596");
+        if(textChannel==null)textChannel = jda.getTextChannelById(RANKING_SEND_CHANNEL);
         return textChannel;
     }
 
