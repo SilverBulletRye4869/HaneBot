@@ -16,25 +16,27 @@ import net.serveron.hane.ranking.Sender;
 
 import javax.security.auth.login.LoginException;
 import java.io.*;
+import java.util.Properties;
 
 public class MainSystem {
     public static final String DOCUMENT_NAME = "discordID";  //データベース名
     public static final int RANKING_MAX_COUNT = 20;  //最大何人分のランキングを表示するか？
-    public static final String RANKING_SEND_CHANNEL = "";  //ランキングを送信するchのid
 
-    private static final String TOKEN_FILE_PATH = "";
-    private static final String FIREBASE_JSON_FILE_PATH = "";
+
+    private static final String TOKEN_FILE_PATH = "C:\\Users\\teruh\\OneDrive - 独立行政法人 国立高等専門学校機構\\マイクラ\\はね鯖\\season2\\bot\\hanebotMemo.env";
+    private static final String FIREBASE_JSON_FILE_PATH = "C:\\Users\\teruh\\OneDrive - 独立行政法人 国立高等専門学校機構\\マイクラ\\はね鯖\\season2\\bot\\firebase.json";
 
     private static JDA jda = null;
     private static TextChannel textChannel = null;
     private static Firestore db;
     private static String botToken = null;
+    private static String rankingSendChannel = null;
 
 
     public static void main(String[] args){
-        botToken = getTokenFromFile();
-        if(botToken==null){
-            System.err.println("tokenの取得に失敗しました");
+        variableSetup();
+        if(botToken==null || rankingSendChannel == null){
+            System.err.println("token又は、ランキングchの取得に失敗しました");
             return;
         }
         botSetup();firebaseSetup();
@@ -47,24 +49,24 @@ public class MainSystem {
 
     }
 
-    private static String getTokenFromFile(){
-        try {
-            File file = new File(TOKEN_FILE_PATH);
-            if(!file.exists())file.createNewFile();
-            if(!file.isFile() || !file.canRead())return null;
-            BufferedReader br = new BufferedReader(new FileReader(file));
-            return br.readLine();
+    private static boolean variableSetup(){
+        try{
+            Properties property = new Properties();
+            property.load(new FileInputStream(TOKEN_FILE_PATH));
+            botToken = property.getProperty("TOKEN");
+            rankingSendChannel = property.getProperty("RANKING_CHANNEL");
+            return true;
         }catch (IOException e){
             e.printStackTrace();
-            return null;
         }
+        return false;
     }
 
     public static void botSetup(){
         try{
             jda = JDABuilder.createDefault(botToken, GatewayIntent.GUILD_MESSAGES)
                     .setRawEventsEnabled(true)
-                    .setActivity(Activity.playing("はね鯖"))
+                    .setActivity(Activity.playing("TaichiServer"))
                     .build();
         }catch (LoginException e){
             e.printStackTrace();
@@ -94,7 +96,7 @@ public class MainSystem {
     public static Firestore getDB(){return db;}
 
     public static TextChannel getTextChannel(){
-        if(textChannel==null)textChannel = jda.getTextChannelById(RANKING_SEND_CHANNEL);
+        if(textChannel==null)textChannel = jda.getTextChannelById(rankingSendChannel);
         return textChannel;
     }
 
