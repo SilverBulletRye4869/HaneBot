@@ -11,55 +11,92 @@ import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.serveron.hane.ranking.Getter;
-import net.serveron.hane.ranking.ResetPerMonth;
 import net.serveron.hane.ranking.Sender;
 
 import javax.security.auth.login.LoginException;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Properties;
 
 public class MainSystem {
-    public static final String DOCUMENT_NAME = "discordID";  //データベース名
+    public static final String DOCUMENT_NAME = "users";  //データベース名
     public static final int RANKING_MAX_COUNT = 20;  //最大何人分のランキングを表示するか？
-
-
-    private static final String TOKEN_FILE_PATH = "C:\\Users\\teruh\\OneDrive - 独立行政法人 国立高等専門学校機構\\マイクラ\\はね鯖\\season2\\bot\\hanebotMemo.env";
-    private static final String FIREBASE_JSON_FILE_PATH = "C:\\Users\\teruh\\OneDrive - 独立行政法人 国立高等専門学校機構\\マイクラ\\はね鯖\\season2\\bot\\firebase.json";
 
     private static JDA jda = null;
     private static TextChannel textChannel = null;
     private static Firestore db;
-    private static String botToken = null;
-    private static String rankingSendChannel = null;
+    private static String botToken = "";
+    private static String rankingSendChannel = "";
+    private static String firebaseJsonPath = "";
 
 
     public static void main(String[] args){
+        if(!folderSetup())return;
         variableSetup();
-        if(botToken==null || rankingSendChannel == null){
-            System.err.println("token又は、ランキングchの取得に失敗しました");
+        if(botToken.equals("") || rankingSendChannel.equals("") || firebaseJsonPath.equals("")){
+            System.err.println("token又はランキングch、firebaseJsonパスの取得に失敗しました");
             return;
         }
         botSetup();firebaseSetup();
 
 
-        new Getter();
-        new ResetPerMonth();
-        new Sender();
-
+        new Getter().run();
 
     }
 
     private static boolean variableSetup(){
         try{
             Properties property = new Properties();
-            property.load(new FileInputStream(TOKEN_FILE_PATH));
+            property.load(new FileInputStream("hanebot/config.env"));
             botToken = property.getProperty("TOKEN");
             rankingSendChannel = property.getProperty("RANKING_CHANNEL");
+            firebaseJsonPath = property.getProperty("FIREBASE_JSON_PATH");
             return true;
         }catch (IOException e){
             e.printStackTrace();
         }
         return false;
+    }
+
+    private static boolean folderSetup(){
+        try{
+            Files.createDirectories(Paths.get("hanebot"));
+        }catch (IOException e){
+            e.printStackTrace();
+            return false;
+        }
+        File file = new File("hanebot/config.env");
+        if(file.exists())return true;
+
+        try {
+            file.createNewFile();
+        }catch (IOException e){
+            System.err.println("config.envファイルの作成に失敗しました");
+            e.printStackTrace();
+            return false;
+        }
+        if(!file.isFile()){
+            System.err.println("config.envはファイルではありません");
+            return false;
+        }
+        if(!file.canWrite()){
+            System.err.println("config.envは書き込み不可のファイルです");
+            return false;
+        }
+
+        try {
+            FileWriter fw = new FileWriter(file);
+            fw.write(
+                "TOKEN=\nRANKING_CHANNEL=\nFIREBASE_JSON_PATH="
+            );
+            fw.close();
+        }catch (IOException e){
+            System.err.println("README.txtファイルの書き込みに失敗しました");
+            return false;
+        }
+
+        return true;
     }
 
     public static void botSetup(){
@@ -77,7 +114,7 @@ public class MainSystem {
     private static void firebaseSetup() {
         GoogleCredentials credentials;
         try {
-            InputStream serviceAccount = new FileInputStream(FIREBASE_JSON_FILE_PATH);
+            InputStream serviceAccount = new FileInputStream(firebaseJsonPath);
             credentials = GoogleCredentials.fromStream(serviceAccount);
         } catch (IOException e) {
             e.printStackTrace();
