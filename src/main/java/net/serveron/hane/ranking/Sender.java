@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public record Sender() {
 
-    public static void send(String type, LinkedHashMap<String, Long> data) {
+    public static void send(String type, LinkedHashMap<String, Long> data, String unit) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("**" + type + "ランキング！**");
         StringJoiner sj = new StringJoiner("\n");
@@ -21,7 +21,8 @@ public record Sender() {
                 rank.incrementAndGet();
                 lastScore.set(value);
             }
-            sj.add("**" + rank + "位: <@" + id + "> (" + value + ")**");
+            if(type.equals("loginTime"))sj.add("**" + rank + "位: <@" + id + "> (" + String.format("%.1f",value/60.0)+ unit+")**");
+            else sj.add("**" + rank + "位: <@" + id + "> (" + value+ unit+")**");
         });
         eb.addField("", sj.toString(), false);
         MainSystem.getTextChannel().sendMessageEmbeds(eb.build()).queue();
