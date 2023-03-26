@@ -17,11 +17,10 @@ public class ResetPerMonth {
     private final SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd");
     private Timer timer = null;
 
-    public ResetPerMonth(){
-        intervalRun();
-    }
+
 
     public void intervalRun(){
+        /*
         this.timer = new Timer(false);
         long delay;
         try {
@@ -40,7 +39,7 @@ public class ResetPerMonth {
             }
         };
 
-        timer.schedule(task,delay);
+        timer.schedule(task,delay);*/
     }
 
     public boolean stop(){
